@@ -1,7 +1,18 @@
 plugins {
     id 'java'
     id 'com.diffplug.spotless' version '6.23.3'
+    id "application"
 }
+
+apply plugin : "java"
+ext {
+    javaMainClass = "org.example.Main"
+}
+
+application {
+    mainClassName = javaMainClass
+}
+
 
 group = 'com.nishant'
 version = '0.0.1-SNAPSHOT'
