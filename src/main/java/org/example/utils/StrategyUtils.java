@@ -82,38 +82,7 @@ public class StrategyUtils {
         .limit(ohlcDataList.size() - DEFAULT_STRATEGY_MINUTES_MARGIN)
         .forEach(
             ohlcData -> {
-              if (TradeUtils.isTradeActive(tradeDataReference.get())) {
-                if (TradeUtils.isBookProfits(tradeDataReference.get(), ohlcData)) {
-                  exitTradeAccordingToSignal(
-                      ohlcData, OrderSignal.BP, tradeDataReference, tradeDataList);
-                } else if (TradeUtils.isStopLoss(tradeDataReference.get(), ohlcData)) {
-                  exitTradeAccordingToSignal(
-                      ohlcData, OrderSignal.SL, tradeDataReference, tradeDataList);
-                }
-              } else {
-                if (isOver(ohlcData, orbData.getUpper())) {
-                  if (Objects.isNull(strategyData.getBreakoutValue()) && blackCandle(ohlcData)) {
-                    strategyData.setBreakoutValue(ohlcData.getLow());
-                  } else if (Objects.nonNull(strategyData.getBreakoutValue())
-                      && closedUnder(ohlcData, strategyData.getBreakoutValue())) {
-                    tradeDataReference.set(
-                        TradeUtils.enterTrade(ohlcData, OrderType.SHORT, OrderSignal.SHORT));
-                    strategyData.setBreakoutValue(null);
-                  }
-                } else if (isUnder(ohlcData, orbData.getLower())) {
-                  if (Objects.isNull(strategyData.getBreakoutValue()) && whiteCandle(ohlcData)) {
-                    strategyData.setBreakoutValue(ohlcData.getHigh());
-                  } else if (Objects.nonNull(strategyData.getBreakoutValue())
-                      && closedOver(ohlcData, strategyData.getBreakoutValue())) {
-                    tradeDataReference.set(
-                        TradeUtils.enterTrade(ohlcData, OrderType.LONG, OrderSignal.LONG));
-                    strategyData.setBreakoutValue(null);
-                  }
-                } else {
-                  strategyData.setBreakoutValue(null);
-                }
-              }
-              LogUtils.info(ohlcData + " " + strategyData + " " + tradeDataReference.get());
+              processSingleTradeDataPoint(orbData, ohlcData, tradeDataReference, tradeDataList, strategyData);
             });
     if (TradeUtils.isTradeActive(tradeDataReference.get())) {
       exitTradeAccordingToSignal(
@@ -123,6 +92,41 @@ public class StrategyUtils {
           tradeDataList);
     }
     return tradeDataList;
+  }
+
+  private static void processSingleTradeDataPoint(ORBData orbData, OHLCData ohlcData, AtomicReference<TradeData> tradeDataReference, List<TradeData> tradeDataList, ORBAdvancedStrategyData strategyData) {
+    if (TradeUtils.isTradeActive(tradeDataReference.get())) {
+      if (TradeUtils.isBookProfits(tradeDataReference.get(), ohlcData)) {
+        exitTradeAccordingToSignal(
+                ohlcData, OrderSignal.BP, tradeDataReference, tradeDataList);
+      } else if (TradeUtils.isStopLoss(tradeDataReference.get(), ohlcData)) {
+        exitTradeAccordingToSignal(
+                ohlcData, OrderSignal.SL, tradeDataReference, tradeDataList);
+      }
+    } else {
+      if (isOver(ohlcData, orbData.getUpper())) {
+        if (Objects.isNull(strategyData.getBreakoutValue()) && blackCandle(ohlcData)) {
+          strategyData.setBreakoutValue(ohlcData.getLow());
+        } else if (Objects.nonNull(strategyData.getBreakoutValue())
+            && closedUnder(ohlcData, strategyData.getBreakoutValue())) {
+          tradeDataReference.set(
+              TradeUtils.enterTrade(ohlcData, OrderType.SHORT, OrderSignal.SHORT));
+          strategyData.setBreakoutValue(null);
+        }
+      } else if (isUnder(ohlcData, orbData.getLower())) {
+        if (Objects.isNull(strategyData.getBreakoutValue()) && whiteCandle(ohlcData)) {
+          strategyData.setBreakoutValue(ohlcData.getHigh());
+        } else if (Objects.nonNull(strategyData.getBreakoutValue())
+            && closedOver(ohlcData, strategyData.getBreakoutValue())) {
+          tradeDataReference.set(
+              TradeUtils.enterTrade(ohlcData, OrderType.LONG, OrderSignal.LONG));
+          strategyData.setBreakoutValue(null);
+        }
+      } else {
+        strategyData.setBreakoutValue(null);
+      }
+    }
+    LogUtils.info(ohlcData + " " + strategyData + " " + tradeDataReference.get());
   }
 
   private static void exitTradeAccordingToSignal(
