@@ -1,0 +1,39 @@
+plugins {
+    id 'java'
+    id 'com.diffplug.spotless' version '6.23.3'
+}
+
+group = 'com.nishant'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '21'
+}
+
+spotless {
+    java {
+        googleJavaFormat()
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('snippetsDir', file("build/generated-snippets"))
+    set('springCloudVersion', "2023.0.0")
+}
+
+dependencies {
+    // https://mvnrepository.com/artifact/org.projectlombok/lombok
+    compileOnly 'org.projectlombok:lombok:1.18.32'
+
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+}
